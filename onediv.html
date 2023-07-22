@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>memo one div</title>
+  <script src="js/p5.min.js"></script>
+</head>
+<body>
+
+	<!-- <canvas id="canva"></canvas> -->
+
+	<div id="wrapper">
+		<button onclick="flip()" data-scope="heart" data-text="heart" data-flip="0" data-disabled="0">123</button>
+		<button onclick="flip()" data-scope="heart" data-text="🤍"   data-flip="0" data-disabled="0">123</button>
+	</div>
+</body>
+
+<script>
+
+
+
+
+
+// p5bg ------------------------------------------------------------
+let stars = 500
+let star = []
+
+function setup() {
+  // put setup code here
+  pixelDensity(1)
+  cnv = createCanvas(windowWidth, windowHeight);
+  cnv.position(0,0)
+  cnv.style('z-index','-1')
+  colorMode(HSB)
+  angleBox = 45
+  rectMode(CENTER)
+  angleMode(DEGREES)
+  // rectMode(CENTER)
+  // angleMode(DEGREES)
+  for (i=0; i<stars; i++){
+  	star[i] = [
+  		floor(random(windowWidth)), // width
+  		floor(random(windowHeight)), // height
+  		random(10), // size
+  		random(50), // color
+  	  random(10)+1, // speed
+  	]
+  }
+  noStroke()
+}
+function draw() {
+  // put drawing code here
+  background(0)
+  drawStars()
+  moveStars()
+  drawBox()
+}
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+function drawBox(){
+	fill(30,0.2)
+	translate(windowWidth/2,windowHeight/2)
+	rotate(angleBox)
+	angleBox++
+	rect(0,0,windowWidth/2,windowWidth/2)
+}
+
+function drawStars() {
+	for (i=0; i<stars; i++){
+		fill(star[i][3],255,255)
+		circle(star[i][0],star[i][1],star[i][2])
+	}
+}
+function moveStars(){
+	for (i=0; i<stars; i++){
+		star[i][0]+=star[i][4]
+		if (star[i][0]>windowWidth) star[i][0]=0
+	}
+}
+
+
+// GAME-------------------------------------------------------------
+	const lesson=`
+2ywn1dlxa9db1.webp
+wgfnbm3za9db1.webp
+zcsix13be9db1.webp
+hkt21ccej9db1.webp
+yvw6vgysgadb1.webp
+shf6v11rnadb1.webp
+mcttlu818bdb1.webp
+99kmdpgmbbdb1.webp
+xuurruswjbdb1.webp
+64a84y0oqbdb1.webp
+`
+// 	const lesson=`
+// swimming|🏊
+// basketball|⛹🏿
+// golf|⛳
+// hockey|🏒
+// football|⚽
+// tennis|🎾
+// surfing|🏄
+// cycling|🚴
+// martial arts|🤼
+// canoeing|🚣
+// `
+	wrapper = document.querySelector("#wrapper")
+	generateField()
+	shuffle()
+	setTextOver()
+	canFlip = true
+
+	function setTextOver(){
+		cards = document.querySelectorAll("button")
+		let i
+	  for (i=0;i<cards.length;i++){
+	  	if ( cards[i].dataset.flip == "0" && cards[i].dataset.disabled == "0" ){
+	    	cards[i].innerHTML = i+1
+	  	}
+	  }
+	}
+
+	function shuffle(){
+		// shuffle cards DOM
+		const container = document.querySelector('#wrapper');
+		const children = Array.from(container.children);
+		children.sort(() => Math.random() - 0.5);
+		for (let i = 0; i < children.length; i++) {
+		  container.appendChild(children[i]);
+		}
+	}
+
+	function generateField(){
+		wrapper.innerHTML = ''
+		let part1,part2
+		let l = lesson.split("\n").forEach((item)=>{
+			if (item=="") return
+			part1 = item
+			part2 = item
+
+			if (item.includes("|")){
+				[part1,part2] = item.split("|")
+			}
+
+			// console.log (part1+" "+part2)
+
+			wrapper.innerHTML += `
+<button onclick="flip(this)" data-scope="${item}" data-text="${part1}" data-flip="0" data-disabled="0"></button>
+<button onclick="flip(this)" data-scope="${item}" data-text="${part2}" data-flip="0" data-disabled="0"></button>`
+		})
+	}
+
+	function flip(item){
+		// if (canFlip==false) {
+		// 	waitClick()
+		// 	return
+		// }
+		if (item.dataset.flip=="1") return
+		if (item.dataset.flip=="0") {
+			let countOpenCard = getCountOpenCard()
+			if (countOpenCard==2) {
+				if (isCardsEqual()) {
+					hideCards()
+				} else {
+					flipCardBack()
+				}
+			}
+			item.dataset.flip = "1"
+		}
+		rePaint()
+		isWin()
+		// let countOpenCard = getCountOpenCard()
+		// // if (countOpenCard==2) {
+		// // 	canFlip = false
+		// // }
+		// if (countOpenCard==3) {
+		// 	let cards = document.querySelectorAll("button")
+		// 	cards.forEach(i=>{
+		// 		i.dataset.flip = "0"
+		// 	})
+		// 	item.dataset.flip = "1"
+		// }
+	}
+
+	function waitClick(){
+		if (isCardsEqual()) {
+			console.log ("the same")
+			hideCards()
+		}
+		else{
+			console.log ("no same")
+			flipCardBack()
+		}
+		isWin()
+		rePaint()
+		canFlip = true
+	}
+
+	function isWin(){
+		let cards = document.querySelectorAll("button")
+		let win = true
+		cards.forEach(item=>{
+			if (item.dataset.disabled == "0") win = false
+		})
+		if (win==true) {
+			alert("Вы выиграли в этот раз, но в другой это вряд ли произойдет..")
+			generateField()
+			shuffle()
+			setTextOver()
+		}
+	}
+	
+	function rePaint(){
+		console.log ("rapeint")
+		let cards = document.querySelectorAll("button")
+		cards.forEach(item=>{ 
+			if (item.dataset.disabled=="1") {
+				item.style = null
+				item.classList.remove(["flip1","flip0"])
+				item.classList.add("disabled")
+				item.innerHTML = ""
+			}
+			if (item.dataset.disabled=="0" && item.dataset.flip=="0") { // show default box
+				item.style = null
+				item.classList.remove("flip1")
+				item.classList.add('flip0')
+			}
+			if (item.dataset.disabled=="0" && item.dataset.flip=="1") { // show image|text
+				if (item.dataset.text.match(/\.webp/)){                    // image
+					item.style.backgroundImage = `url("img/${item.dataset.text}")`
+					item.innerHTML = ''
+				} else {                                                  // text
+					item.innerHTML = item.dataset.text
+				}
+				item.classList.remove("flip0")
+				item.classList.add('flip1')
+			}
+		})
+		setTextOver()
+	}
+
+	function flipCardBack(){
+		let cards = document.querySelectorAll("button")
+		cards.forEach(item=>{ 
+			if (item.dataset.flip=="1") item.dataset.flip="0"
+		})
+	}
+
+	function hideCards(){
+		let cards = document.querySelectorAll("button")
+		cards.forEach(item=>{ 
+			if (item.dataset.flip=="1") {
+				item.dataset.disabled="1"
+				item.dataset.flip="0"
+			}
+		})
+	}
+
+	function isCardsEqual(){
+		let cards = document.querySelectorAll("button")
+		let card1, card2
+		cards.forEach(item=>{ 
+			console.log (".")
+			if (item.dataset.flip=="1" &&  card1) card2 = item
+			if (item.dataset.flip=="1" && !card1) card1 = item
+		})
+		// if (!card2) return false
+		if (card1.dataset.scope == card2.dataset.scope) return true
+		return false
+	}
+
+	function getCountOpenCard(){
+		let cards = document.querySelectorAll("button")
+		let flipped=0
+		cards.forEach(item=>{ 
+			if (item.dataset.flip=="1" && item.dataset.disabled=="0"){
+				flipped+=1
+			}
+		})
+		return flipped
+	}
+
+</script>
+<style>
+:root{
+	--fontSize1: 4rem;
+	--fontSize2: 1.5rem;
+	--fontSize3: 1rem;
+}
+body{margin: 0px;}
+@media screen and (max-width: 1000px) { /* mobile */
+	button{ 
+		width:90px; 
+		height:90px;
+	}
+}
+@media screen and (min-width: 1000px) { /* desktop */
+	#wrapper{
+		max-width: 960px;
+	}
+	button{ 
+		width:180px; 
+		height:180px;
+	}
+}
+#wrapper{
+	margin: auto;
+}
+button{ 
+	font-size: var(--fontSize1);
+	cursor: pointer; 
+	float: left;
+	border-width: 1px;
+	border-style: solid;
+	border-color: black;
+	background: rgb(16,15,15);
+}
+.flip1{
+	background-color: #B7FF9B;
+	background-image: none;
+	font-size: var(--fontSize1);
+	color: #0043AD;
+}
+.flip0{
+	background-color: #E5E5E5;
+	background-image: none;
+	font-size: var(--fontSize1);
+}
+button, .flip0{
+	border-radius: 3px;
+	background: linear-gradient(49deg, rgba(16,15,15,1) 0%, rgba(253,29,29,1) 50%, rgba(252,176,69,1) 87%, rgba(0,0,0,1) 100%);
+	background-size: cover;
+	color: #ffffff45;
+
+}
+.disabled{
+	background-color: transparent;
+	background-image: none;
+}
+
+</style>
+</html>
